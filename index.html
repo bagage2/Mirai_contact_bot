@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kontakt do właściciela auta</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto; margin:0; background:#0b0f14; color:#e8eef6;}
+    .wrap{max-width:560px; margin:0 auto; padding:24px;}
+    .card{background:#121a24; border:1px solid #243244; border-radius:16px; padding:18px;}
+    h1{font-size:20px; margin:0 0 10px;}
+    p{opacity:.85; line-height:1.5; margin:0 0 14px;}
+    label{display:block; font-size:13px; opacity:.85; margin:12px 0 6px;}
+    input, textarea{width:100%; box-sizing:border-box; border-radius:12px; border:1px solid #2a3a50; background:#0e1520; color:#e8eef6; padding:12px;}
+    textarea{min-height:110px; resize:vertical;}
+    button{width:100%; margin-top:14px; border:0; border-radius:12px; padding:12px; font-weight:700; background:#3a7afe; color:#fff;}
+    .small{font-size:12px; opacity:.7; margin-top:10px;}
+    .ok{color:#7CFF9E;}
+    .err{color:#FF7C7C;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Wyślij wiadomość do właściciela auta</h1>
+      <p>Jeśli potrzebujesz pilnie skontaktować się w sprawie parkowania/świateł/okna/kolizji — zostaw wiadomość poniżej. Numer telefonu nie jest ujawniany.</p>
+
+      <label>Miejsce / sytuacja (np. „parking Biedronka, blokujesz wyjazd”)</label>
+      <input id="where" placeholder="Gdzie jesteś i co się stało?" />
+
+      <label>Kontakt zwrotny (opcjonalnie: telefon / e-mail)</label>
+      <input id="reply" placeholder="Jeśli chcesz, wpisz kontakt" />
+
+      <label>Wiadomość</label>
+      <textarea id="msg" placeholder="Napisz wiadomość..."></textarea>
+
+      <button id="send">Wyślij</button>
+      <div id="status" class="small"></div>
+
+      <div class="small">Wiadomości spamowe/żartobliwe mogą być zapisywane.</div>
+    </div>
+  </div>
+
+<script>
+  // 8463627349:AAFpccAbA-PuXbP2Aq7getgJfcZvTABFMbQ
+  const BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN";
+  // 8463627349:AAFpccAbA-PuXbP2Aq7getgJfcZvTABFMbQ
+  const CHAT_ID   = "PASTE_YOUR_CHAT_ID";
+
+  const $ = (id) => document.getElementById(id);
+  const statusEl = $("status");
+
+  function setStatus(text, cls){
+    statusEl.className = "small " + (cls || "");
+    statusEl.textContent = text;
+  }
+
+  $("send").addEventListener("click", async () => {
+    const where = $("where").value.trim();
+    const reply = $("reply").value.trim();
+    const msg   = $("msg").value.trim();
+
+    if(!where || !msg){
+      setStatus("Pola „Miejsce / sytuacja” oraz „Wiadomość” są wymagane.", "err");
+      return;
+    }
+
+    setStatus("Wysyłanie…");
+
+    const text =
+`🚗 Wiadomość dot. auta
+- Miejsce/sytuacja: ${where}
+- Kontakt zwrotny (opc.): ${reply || "(brak)"}
+- Treść: ${msg}
+- Czas: ${new Date().toLocaleString("pl-PL")}`;
+
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    try{
+      const res = await fetch(url, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ chat_id: CHAT_ID, text })
+      });
+
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      setStatus("Wysłano ✅", "ok");
+      $("msg").value = "";
+    }catch(e){
+      setStatus("Błąd wysyłania ❌ (sprawdź token/chat_id albo sieć)", "err");
+      console.error(e);
+    }
+  });
+</script>
+</body>
+</html>
